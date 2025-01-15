@@ -3,7 +3,6 @@ const mysql = require('mysql');
 
 const app = express();
 
-// MySQL connection
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -18,15 +17,11 @@ db.connect(err => {
     console.log('Connected to MySQL');
 });
 
-// Middleware
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
-app.use(express.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
-// Routes
-
-// Home page - Display products
 app.get('/', (req, res) => {
     const query = 'SELECT * FROM products';
     db.query(query, (err, results) => {
@@ -38,15 +33,12 @@ app.get('/', (req, res) => {
     });
 });
 
-// Add product page
 app.get('/add', (req, res) => {
     res.render('add');
 });
 
-// Check product code and handle add/update
 app.post('/api/check-code', (req, res) => {
     const { code, description, price, quantity } = req.body;
-    // Check if the product code exists
     const checkQuery = 'SELECT * FROM products WHERE code = ?';
     db.query(checkQuery, [code], (err, results) => {
         if (err) {
@@ -56,7 +48,6 @@ app.post('/api/check-code', (req, res) => {
         console.log('SELECT Query Results:', results);
 
         if (results.length > 0) {
-            // Code exists: Update the quantity
             const existingQuantity = results[0].quantity;
             const newQuantity = existingQuantity + parseInt(quantity, 10);
             const updateQuery = 'UPDATE products SET quantity = ? WHERE code = ?';
@@ -69,7 +60,6 @@ app.post('/api/check-code', (req, res) => {
                 res.json({ message: 'Quantity updated', updatedQuantity: newQuantity });
             });
         } else {
-            // Code does not exist: Insert a new product
             const insertQuery = 'INSERT INTO products (code, description, price, quantity) VALUES (?, ?, ?, ?)';
 
             db.query(insertQuery, [code, description, price, quantity], err => {
@@ -83,7 +73,6 @@ app.post('/api/check-code', (req, res) => {
     });
 });
 
-// Edit product page
 app.get('/edit/:id', (req, res) => {
     const query = 'SELECT * FROM products WHERE id = ?';
     db.query(query, [req.params.id], (err, results) => {
@@ -97,7 +86,6 @@ app.get('/edit/:id', (req, res) => {
     });
 });
 
-// Handle product edit submission
 app.post('/edit/:id', (req, res) => {
     const { code, description, price, quantity } = req.body;
 
@@ -111,7 +99,6 @@ app.post('/edit/:id', (req, res) => {
     });
 });
 
-// Delete product
 app.get('/delete/:id', (req, res) => {
     const query = 'DELETE FROM products WHERE id = ?';
     db.query(query, [req.params.id], err => {
@@ -123,7 +110,6 @@ app.get('/delete/:id', (req, res) => {
     });
 });
 
-// Start server
 app.listen(3000, () => {
     console.log('Server running on http://localhost:3000');
 });
